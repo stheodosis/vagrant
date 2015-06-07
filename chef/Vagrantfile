@@ -1,0 +1,31 @@
+VAGRANTFILE_API_VERSION = "2"
+ 
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "centos"
+  config.vm.provider "virtualbox" do |vb|
+    vb.cpus = 2
+	vb.memory = "1024"
+  end
+ 
+  config.vm.network "private_network", type: "dhcp"
+  config.ssh.insert_key = false
+  
+  config.hostmanager.enabled = true
+  
+  config.hostmanager.ip_resolver = proc do |vm, resolving_vm|
+    if vm.id
+      `VBoxManage guestproperty get #{vm.id} "/VirtualBox/GuestInfo/Net/1/V4/IP"`.split()[1]
+    end
+  end
+  
+  config.vm.define :server do |srv|
+    srv.vm.hostname = "chef.local"
+    #srv.vm.provision "shell", path: "server-provision"
+    config.vm.provision "chef_solo" do |chef|
+	    chef.version = "11.10.4"
+		chef.cookbooks_path = "C:\\Users\\stheodosis\\Documents\\mine\\chef_repo\\cookbooks"
+		chef.add_recipe "openchef"
+	end
+  end
+  
+end
